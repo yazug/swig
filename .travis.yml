@@ -46,10 +46,10 @@ script:
 #  - if test -z "$SWIGLANG"; then sudo make -s install && swig -version && ccache-swig -V; fi
 #  - echo -en 'travis_fold:end:script.2\\r'
   - if test -n "$SWIGLANG"; then make -s check-$SWIGLANG-version; fi
-  - if test -n "$SWIGLANG"; then make -k $SWIGJOBS check-$SWIGLANG-examples; fi
+  - if test -n "$SWIGLANG"; then make -k $SWIGJOBS check-$SWIGLANG-examples CFLAGS="${CFLAGS_EXAMPLES[$SWIGLANG]}" CXXFLAGS="${CXXFLAGS_EXAMPLES[$SWIGLANG]}"; fi
   - if test -n "$SWIGLANG"; then make -k $SWIGJOBS check-$SWIGLANG-test-suite; fi
   - echo 'Cleaning...' && echo -en 'travis_fold:start:script.3\\r'
-  - make maintainer-clean && ../../configure $CONFIGOPTS
+  - make maintainer-clean && find . -type f | sed 's/^/File left after maintainer-clean - /' && ../../configure $CONFIGOPTS
   - echo -en 'travis_fold:end:script.3\\r'
 branches:
   only:
