@@ -159,7 +159,7 @@ static JSValueRef $jswrapper(JSContextRef context, JSObjectRef thisObject, JSStr
 
     goto fail;
     fail:
-    return NULL;
+    return JSValueMakeUndefined(context);
 }
 %}
 
@@ -204,7 +204,7 @@ static JSValueRef $jswrapper(JSContextRef context, JSObjectRef function, JSObjec
 
   goto fail;
   fail:
-  return NULL;
+  return JSValueMakeUndefined(context);
 }
 %}
 
@@ -229,7 +229,7 @@ static JSValueRef $jswrapper(JSContextRef context, JSObjectRef function, JSObjec
 
   goto fail;
   fail:
-  return NULL;
+  return JSValueMakeUndefined(context);
 }
 %}
 
