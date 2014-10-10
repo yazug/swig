@@ -789,7 +789,7 @@ AC_SUBST(PY3INCLUDE)
 AC_SUBST(PY3LIB)
 AC_SUBST(PY3LINK)
 AC_SUBST(PYTHON3DYNAMICLINKING)
-
+AC_CHECK_PROGS(PEP8, pep8)
 
 #----------------------------------------------------------------
 # Look for Perl5
@@ -1224,7 +1224,7 @@ else
 
   # check for include files
   AC_MSG_CHECKING(for V8 Javascript v8.h)
-  AC_ARG_WITH(jsv8inc, [  --with-v8inc=path    Set location of Javascript v8 include directory], [JSV8INCDIR="$withval"])
+  AC_ARG_WITH(jsv8inc, [  --with-jsv8inc=path    Set location of Javascript v8 include directory], [JSV8INCDIR="$withval"])
 
   # if not include dir is specified we try to find
   if test -z "$JSV8INCDIR"; then
@@ -1257,11 +1257,11 @@ else
 
   # check for V8 library
   AC_MSG_CHECKING(for V8 Javascript library)
-  AC_ARG_WITH(jsv8lib,[  --with-v8lib=path      Set location of V8 Javascript library directory],[JSV8LIBDIR="$withval"], [JSV8LIB=])
+  AC_ARG_WITH(jsv8lib,[  --with-jsv8lib=path      Set location of V8 Javascript library directory],[JSV8LIBDIR="$withval"], [JSV8LIB=])
 
   v8libdirs="$JSV8LIBDIR /usr/lib64/ /usr/local/lib64/ /usr/lib/ /usr/local/lib/"
   for d in $v8libdirs ; do
-    if test -r $d/libv8.so; then
+    if test -r $d/libv8$JSSO; then
       JSV8LIBDIR=$d
       JSV8LIB="-L$d -lv8"
       break
@@ -1280,7 +1280,7 @@ else
   # linking options
   case $host in
   *-*-darwin*)
-    JSV8DYNAMICLINKING="" # TODO: add osx configuration
+    JSV8DYNAMICLINKING="$JSV8LIB"
     ;;
   *-*-linux*)
     JSV8DYNAMICLINKING="$JSV8LIB"
@@ -2291,14 +2291,21 @@ else
       GOVERSIONOPTION=version
       GOC=$(sh -c "$(go env) && echo \$GOCHAR")c
       go_version=$($GO $GOVERSIONOPTION | sed -e 's/go version //')
+      AC_MSG_CHECKING([whether go version is too old])
       case $go_version in
-      go1.0*) GOOPT="-intgosize 32" ;;
-      *) if test "$GOC" = "6c"; then
-           GOOPT="-intgosize 64"
-         else
-           GOOPT="-intgosize 32"
-	 fi
-	 ;;
+      go1.0*)
+	AC_MSG_RESULT([yes - minimum version is 1.1])
+	GO=
+	GOOPT="-intgosize 32"
+	;;
+      *)
+	AC_MSG_RESULT([no])
+	if test "$GOC" = "6c"; then
+          GOOPT="-intgosize 64"
+        else
+          GOOPT="-intgosize 32"
+	fi
+	;;
       esac
       case $go_version in
       go1.0* | go1.1*)
@@ -2315,14 +2322,17 @@ else
       GOC=`echo $GO | sed -e 's/g/c/'`
       GOVERSIONOPTION=-V
       AC_MSG_CHECKING([whether Go ($GO) version is too old])
-      go_version=`$GO $GOVERSIONOPTION 2>/dev/null | sed -e 's/.*version.* \([[0-9]]*\).*/\1/'`
-      go_min_version=7077
-      if test "$go_version" != "" -a "$go_version" -lt $go_min_version; then
-        AC_MSG_RESULT([yes - minimum version is $go_min_version])
-        GO=
-      else
-        AC_MSG_RESULT([no])
-      fi
+      AC_MSG_RESULT([yes - minimum version is 1.1])
+      GO=
+      dnl Old code retained for now in case we implement an option for it.
+      dnl go_version=`$GO $GOVERSIONOPTION 2>/dev/null | sed -e 's/.*version.* \([[0-9]]*\).*/\1/'`
+      dnl go_min_version=7077
+      dnl if test "$go_version" != "" -a "$go_version" -lt $go_min_version; then
+      dnl   AC_MSG_RESULT([yes - minimum version is $go_min_version])
+      dnl   GO=
+      dnl else
+      dnl   AC_MSG_RESULT([no])
+      dnl fi
       GOOPT="-intgosize 32"
       GO12=false
       GO13=false
