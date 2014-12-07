@@ -919,6 +919,11 @@ private:
       } else if (goTypeIsInterface(p, ty) || Getattr(p, "tmap:goin")) {
 	needs_wrapper = true;
       }
+
+      if (paramNeedsEscape(p)) {
+	needs_wrapper = true;
+      }
+
       p = nextParm(p);
     }
     if (goTypeIsInterface(n, result) || goout != NULL) {
@@ -1204,6 +1209,14 @@ private:
 	  Setattr(p, "emit:goinput", ivar);
 	}
 
+	// If the parameter has an argout or freearg typemap, make
+	// sure that it escapes.
+	if (paramNeedsEscape(p)) {
+	  Printv(f_go_wrappers, "\tif Swig_escape_always_false {\n", NULL);
+	  Printv(f_go_wrappers, "\t\tSwig_escape_val = ", Getattr(p, "emit:goinput"), "\n", NULL);
+	  Printv(f_go_wrappers, "\t}\n", NULL);
+	}
+
 	p = nextParm(p);
       }
       Printv(call, ")\n", NULL);
@@ -1268,6 +1281,31 @@ private:
     }
     *arg = true;
     return "base";
+  }
+
+  /* ----------------------------------------------------------------------
+   * paramNeedsEscape()
+   *
+   * A helper for goFunctionWrapper that returns whether a parameter
+   * needs to explicitly escape.  This is true if the parameter has a
+   * non-empty argout or freearg typemap, because in those cases the
+   * Go argument might be or contain a pointer.  We need to ensure
+   * that that pointer does not oint into the stack, which means that
+   * it needs to escape.
+   * ---------------------------------------------------------------------- */
+  bool paramNeedsEscape(Parm *p) {
+    String *argout = Getattr(p, "tmap:argout");
+    String *freearg = Getattr(p, "tmap:freearg");
+    if ((!argout || Len(argout) == 0) && (!freearg || Len(freearg) == 0)) {
+      return false;
+    }
+    // If a C++ type is represented as an interface type in Go, then
+    // we don't care whether it escapes, because we know that the
+    // pointer is a C++ pointer.
+    if (goTypeIsInterface(p, Getattr(p, "type"))) {
+      return false;
+    }
+    return true;
   }
 
   /* ----------------------------------------------------------------------
@@ -1342,11 +1380,19 @@ private:
     Parm *p = parms;
     for (int i = 0; i < parm_count; ++i) {
       p = getParm(p);
+
       String *ln = Getattr(p, "lname");
       SwigType *pt = Getattr(p, "type");
       String *ct = gcCTypeForGoValue(p, pt, ln);
       Printv(f->code, "\t\t\t", ct, ";\n", NULL);
       Delete(ct);
+
+      String *gn = NewStringf("_swig_go_%d", i);
+      ct = gcCTypeForGoValue(p, pt, gn);
+      Setattr(p, "emit:input", gn);
+      Wrapper_add_local(f, gn, ct);
+      Delete(ct);
+
       p = nextParm(p);
     }
     if (SwigType_type(result) != T_VOID) {
@@ -1367,23 +1413,28 @@ private:
 
     Printv(f->code, "\n", NULL);
 
-    // Copy the input arguments out of the structure into the
-    // parameter variables.
-
+    // Copy the input arguments out of the structure into the Go local
+    // variables.
     p = parms;
     for (int i = 0; i < parm_count; ++i) {
       p = getParm(p);
+      String *ln = Getattr(p, "lname");
+      String *gn = Getattr(p, "emit:input");
+      Printv(f->code, "\t", gn, " = swig_a->", ln, ";\n", NULL);
+      p = nextParm(p);
+    }
 
+    // Apply the in typemaps.
+    p = parms;
+    for (int i = 0; i < parm_count; ++i) {
+      p = getParm(p);
       String *tm = Getattr(p, "tmap:in");
       if (!tm) {
 	Swig_warning(WARN_TYPEMAP_IN_UNDEF, input_file, line_number, "Unable to use type %s as a function argument\n", SwigType_str(Getattr(p, "type"), 0));
       } else {
-	String *ln = Getattr(p, "lname");
-	String *input = NewString("");
-	Printv(input, "swig_a->", ln, NULL);
 	tm = Copy(tm);
-	Replaceall(tm, "$input", input);
-	Setattr(p, "emit:input", input);
+	String *gn = Getattr(p, "emit:input");
+	Replaceall(tm, "$input", gn);
 	if (i < required_count) {
 	  Printv(f->code, "\t", tm, "\n", NULL);
 	} else {
@@ -1911,12 +1962,26 @@ private:
     if (!is_public(n)) {
       return SWIG_OK;
     }
-    if (Getattr(parentNode(n), "unnamed")) {
+
+    Swig_require("enumvalueDeclaration", n, "*sym:name", NIL);
+    Node *parent = parentNode(n);
+
+    if (Getattr(parent, "unnamed")) {
       Setattr(n, "type", NewString("int"));
     } else {
-      Setattr(n, "type", Getattr(parentNode(n), "enumtype"));
+      Setattr(n, "type", Getattr(parent, "enumtype"));
     }
-    return goComplexConstant(n, Getattr(n, "type"));
+
+    if (GetFlag(parent, "scopedenum")) {
+      String *symname = Getattr(n, "sym:name");
+      symname = Swig_name_member(0, Getattr(parent, "sym:name"), symname);
+      Setattr(n, "sym:name", symname);
+      Delete(symname);
+    }
+
+    int ret = goComplexConstant(n, Getattr(n, "type"));
+    Swig_restore(n);
+    return ret;
   }
 
   /* -----------------------------------------------------------------------
@@ -4363,7 +4428,7 @@ private:
 	    }
 
 	    fn = i + 1;
-	    Printf(f_go_wrappers, "\t\tif _, ok := a[%d].(%s); !ok {\n", j, tm);
+	    Printf(f_go_wrappers, "\t\tif _, ok := a[%d].(%s); !ok {\n", j, goType(pj, Getattr(pj, "type")));
 	    Printf(f_go_wrappers, "\t\t\tgoto check_%d\n", fn);
 	    Printv(f_go_wrappers, "\t\t}\n", NULL);
 	  }

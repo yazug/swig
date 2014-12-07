@@ -5,6 +5,33 @@ See the RELEASENOTES file for a summary of changes in each release.
 Version 3.0.3 (in progress)
 ===========================
 
+2014-12-07: wsfulton
+            Add support for C++11 strongly typed enumerations.
+
+2014-11-21: wsfulton
+            [Java C#] Fix multiply defined error when using %rename of enum items when using the "simple enum" wrappers.
+
+2014-10-28: vadz
+            [Python] Patch #201 The generated .py file no longer uses *args for all Python parameters.
+            Instead, the parameters are named using the C++ parameter names.
+
+2014-10-24: timotheecour
+            [D] Patch #204 Use core.atomic.atomicOp to mutate shared variables
+
+2014-10-21: wsfulton
+            Fix issue #242 - Use of the "kwargs" feature no longer automatically turns on the
+            "compactdefaultargs" feature if the target language does not support kwargs.
+            Only Java and Python support kwargs, so this affects all the other languages.
+
+            *** POTENTIAL INCOMPATIBILITY  ***
+
+2014-10-10: diorcety
+            [Python] Patch #232 Fix property access using directors
+
+2014-10-06: wsfulton
+            [Python] Fixes when using -builtin and std::vector/std::list wrappers to allow deletion
+            of single elements, such as 'del vec[0]'.
+
 2014-09-30: oliverb
             [Javascript] Merge patch #216 by Richie765 - Added support for many versions of v8 javascript.
 
