@@ -143,6 +143,7 @@ CPP_TEST_CASES += \
 	class_scope_weird \
 	compactdefaultargs \
 	const_const_2 \
+	constant_directive \
 	constant_pointers \
 	constover \
 	constructor_copy \
@@ -298,6 +299,7 @@ CPP_TEST_CASES += \
 	nested_directors \
 	nested_comment \
 	nested_scope \
+	nested_template_base \
 	nested_workaround \
 	newobject1 \
 	null_pointer \
@@ -382,6 +384,7 @@ CPP_TEST_CASES += \
 	template_classes \
 	template_const_ref \
 	template_construct \
+	template_templated_constructors \
 	template_default \
 	template_default2 \
 	template_default_arg \
