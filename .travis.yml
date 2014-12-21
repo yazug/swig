@@ -31,17 +31,19 @@ before_install:
   - if test "$SWIGLANG" = "python" -a "$PY3"; then brew install python3 && brew list -v python3; fi
   - ls -la $(which $CC)
   - ls -la $(which $CXX)
+  # Language specific compile flags
+  # -Wno-attributes is for clang LLVM 3.5 and bdw-gc < 7.5 used by guile
   - declare -A CFLAGS_EXAMPLES && CFLAGS_EXAMPLES=(
-         ["guile"]="-Wno-attributes" # For clang LLVM 3.5 and bdw-gc < 7.5
+         ["guile"]="-Wno-attributes"
     )
   - declare -A CXXFLAGS_EXAMPLES && CXXFLAGS_EXAMPLES=(
-         ["guile"]="-Wno-attributes" # For clang LLVM 3.5 and bdw-gc < 7.5
+         ["guile"]="-Wno-attributes"
     )
   - declare -A CFLAGS_TESTSUITE && CFLAGS_TESTSUITE=(
-         ["guile"]="-Wno-attributes" # For clang LLVM 3.5 and bdw-gc < 7.5
+         ["guile"]="-Wno-attributes"
     )
   - declare -A CXXFLAGS_TESTSUITE && CXXFLAGS_TESTSUITE=(
-         ["guile"]="-Wno-attributes" # For clang LLVM 3.5 and bdw-gc < 7.5
+         ["guile"]="-Wno-attributes"
     )
   - $CC --version
   - $CXX --version
