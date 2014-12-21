@@ -32,19 +32,9 @@ before_install:
   - ls -la $(which $CC)
   - ls -la $(which $CXX)
   # Language specific compile flags
+  - export CFLAGS_EXAMPLES="" && export CXXFLAGS_EXAMPLES="" && export CFLAGS_TESTSUITE="" && export CXXFLAGS_TESTSUITE=""
   # -Wno-attributes is for clang LLVM 3.5 and bdw-gc < 7.5 used by guile
-  - declare -A CFLAGS_EXAMPLES && CFLAGS_EXAMPLES=(
-         ["guile"]="-Wno-attributes"
-    )
-  - declare -A CXXFLAGS_EXAMPLES && CXXFLAGS_EXAMPLES=(
-         ["guile"]="-Wno-attributes"
-    )
-  - declare -A CFLAGS_TESTSUITE && CFLAGS_TESTSUITE=(
-         ["guile"]="-Wno-attributes"
-    )
-  - declare -A CXXFLAGS_TESTSUITE && CXXFLAGS_TESTSUITE=(
-         ["guile"]="-Wno-attributes"
-    )
+  - if test "$SWIGLANG" = "guile"; then export CFLAGS_EXAMPLES="-Wno-attributes" && export CXXFLAGS_EXAMPLES="-Wno-attributes" && export CFLAGS_TESTSUITE="-Wno-attributes" && export CXXFLAGS_TESTSUITE="-Wno-attributes"; fi
   - $CC --version
   - $CXX --version
 script:
@@ -59,8 +49,8 @@ script:
 #  - if test -z "$SWIGLANG"; then sudo make -s install && swig -version && ccache-swig -V; fi
 #  - echo -en 'travis_fold:end:script.2\\r'
   - if test -n "$SWIGLANG"; then make -s check-$SWIGLANG-version; fi
-  - if test -n "$SWIGLANG"; then make -k $SWIGJOBS check-$SWIGLANG-examples CFLAGS="${CFLAGS_EXAMPLES[$SWIGLANG]}" CXXFLAGS="${CXXFLAGS_EXAMPLES[$SWIGLANG]}"; fi
-  - if test -n "$SWIGLANG"; then make -k $SWIGJOBS check-$SWIGLANG-test-suite CFLAGS="${CFLAGS_TESTSUITE[$SWIGLANG]}" CXXFLAGS="${CXXFLAGS_TESTSUITE[$SWIGLANG]}"; fi
+  - if test -n "$SWIGLANG"; then make -k $SWIGJOBS check-$SWIGLANG-examples CFLAGS="$CFLAGS_EXAMPLES" CXXFLAGS="$CXXFLAGS_EXAMPLES"; fi
+  - if test -n "$SWIGLANG"; then make -k $SWIGJOBS check-$SWIGLANG-test-suite CFLAGS="$CFLAGS_TESTSUITE" CXXFLAGS="$CXXFLAGS_TESTSUITE"; fi
   - echo 'Cleaning...' && echo -en 'travis_fold:start:script.3\\r'
   - make check-maintainer-clean && ../../configure $CONFIGOPTS
   - echo -en 'travis_fold:end:script.3\\r'
