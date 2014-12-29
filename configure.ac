@@ -821,7 +821,7 @@ fi
 # perl -MExtUtils::Embed -e ccopts
 AC_MSG_CHECKING(for Perl5 header files)
 if test -n "$PERL"; then
-	PERL5DIR=`($PERL -e 'use Config; print $Config{archlib}, "\n";') 2>/dev/null`
+	PERL5DIR=`($PERL -MConfig -le 'print $Config{archlibexp}') 2>/dev/null`
 	if test -n "$PERL5DIR" ; then
 		dirs="$PERL5DIR $PERL5DIR/CORE"
 		PERL5EXT=none
@@ -1124,27 +1124,14 @@ else
   #----------------------------------------------------------------
 
   case $host in
-  *-*-cygwin* | *-*-mingw*)
-    JSLIBRARYPREFIX=""
-    ;;
-  *)
-    JSLIBRARYPREFIX="lib"
-    ;;
-  esac
-
-  case $host in
   *-*-darwin*)
     JSSO=".dylib"
-    JSLDSHARED='$(CC) -dynamiclib'
-    JSCXXSHARED='$(CXX) -dynamiclib'
     # HACK: didn't manage to get dynamic module loading working with a g++ compiled interpreter
     JSINTERPRETERCXX='c++'
     JSINTERPRETERLINKFLAGS='-g -Wl,-search_paths_first -Wl,-headerpad_max_install_names'
     ;;
   *)
     JSSO=$SO
-    JSLDSHARED='$(LDSHARED)'
-    JSCXXSHARED='$(CXXSHARED)'
     JSINTERPRETERCXX='$(CXX)'
     JSINTERPRETERLINKFLAGS='-ldl'
     ;;
@@ -1295,11 +1282,6 @@ else
   esac
 
 fi
-
-AC_SUBST(JSLIBRARYPREFIX)
-AC_SUBST(JSSO)
-AC_SUBST(JSLDSHARED)
-AC_SUBST(JSCXXSHARED)
 
 AC_SUBST(JSINTERPRETERCXX)
 AC_SUBST(JSINTERPRETERLINKFLAGS)
@@ -1507,6 +1489,7 @@ AC_ARG_WITH(ruby, AS_HELP_STRING([--without-ruby], [Disable Ruby])
 AS_HELP_STRING([--with-ruby=path], [Set location of Ruby executable]),[ RUBYBIN="$withval"], [RUBYBIN=yes])
 
 # First, check for "--without-ruby" or "--with-ruby=no".
+RUBYSO=$SO
 if test x"${RUBYBIN}" = xno -o x"${with_alllang}" = xno ; then
 AC_MSG_NOTICE([Disabling Ruby])
 RUBY=
