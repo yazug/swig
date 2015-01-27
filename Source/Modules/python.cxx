@@ -1976,32 +1976,31 @@ public:
   bool is_representable_as_pyargs(Node *n) {
     bool is_representable = true;
 
-    if (Getattr(n, "sym:overloaded")) {
-      ParmList *plist = CopyParmList(Getattr(n, "parms"));
-      Parm *p;
-      Parm *pnext;
+    ParmList *plist = CopyParmList(Getattr(n, "parms"));
+    Parm *p;
+    Parm *pnext;
 
-      for (p = plist; p; p = pnext) {
-	pnext = NIL;
-	String *tm = Getattr(p, "tmap:in");
-	if (tm) {
-	  pnext = Getattr(p, "tmap:in:next");
-	  if (checkAttribute(p, "tmap:in:numinputs", "0")) {
-	    continue;
-	  }
+    for (p = plist; p; p = pnext) {
+      pnext = NIL;
+      String *tm = Getattr(p, "tmap:in");
+      if (tm) {
+	pnext = Getattr(p, "tmap:in:next");
+	if (checkAttribute(p, "tmap:in:numinputs", "0")) {
+	  continue;
 	}
-	if (!pnext) {
-	  pnext = nextSibling(p);
-	}
-	if (String *value = Getattr(p, "value")) {
-	  String *type = Getattr(p, "type");
-	  if (!convertValue(value, type)) {
-	    is_representable = false;
-	    break;
-	  }
+      }
+      if (!pnext) {
+	pnext = nextSibling(p);
+      }
+      if (String *value = Getattr(p, "value")) {
+	String *type = Getattr(p, "type");
+	if (!convertValue(value, type)) {
+	  is_representable = false;
+	  break;
 	}
       }
     }
+
     return is_representable;
   }
 
@@ -3295,7 +3294,32 @@ public:
       Replaceall(tm, "$source", value);
       Replaceall(tm, "$target", name);
       Replaceall(tm, "$value", value);
-      Printf(f_init, "%s\n", tm);
+      if (!builtin && (shadow) && (!(shadow & PYSHADOW_MEMBER)) && (!in_class || !Getattr(n, "feature:python:callback"))) {
+        // Generate method which registers the new constant
+        Printf(f_wrappers, "SWIGINTERN PyObject *%s_swigconstant(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {\n", iname);
+        Printf(f_wrappers, tab2 "PyObject *module;\n", tm);
+	if (modernargs) {
+	  if (fastunpack) {
+	    Printf(f_wrappers, tab2 "if (!SWIG_Python_UnpackTuple(args,(char*)\"swigconstant\", 1, 1,&module)) return NULL;\n");
+	  } else {
+	    Printf(f_wrappers, tab2 "if (!PyArg_UnpackTuple(args,(char*)\"swigconstant\", 1, 1,&module)) return NULL;\n");
+	  }
+	} else {
+	  Printf(f_wrappers, tab2 "if (!PyArg_ParseTuple(args,(char*)\"O:swigconstant\", &module)) return NULL;\n");
+	}
+        Printf(f_wrappers, tab2 "PyObject *d = PyModule_GetDict(module);\n");
+        Printf(f_wrappers, tab2 "if (!d) return NULL;\n");
+        Printf(f_wrappers, tab2 "%s\n", tm);
+        Printf(f_wrappers, tab2 "return SWIG_Py_Void();\n");
+        Printf(f_wrappers, "}\n\n\n");
+
+        // Register the method in SwigMethods array
+	String *cname = NewStringf("%s_swigconstant", iname);
+	add_method(cname, cname, 0);
+	Delete(cname);
+      } else {
+        Printf(f_init, "%s\n", tm);
+      }
       Delete(tm);
       have_tm = 1;
     }
@@ -3310,9 +3334,13 @@ public:
 
     if (!builtin && (shadow) && (!(shadow & PYSHADOW_MEMBER))) {
       if (!in_class) {
+	Printv(f_shadow, "\n",NIL);
+	Printv(f_shadow, module, ".", iname, "_swigconstant(",module,")\n", NIL);
 	Printv(f_shadow, iname, " = ", module, ".", iname, "\n", NIL);
       } else {
 	if (!(Getattr(n, "feature:python:callback"))) {
+	  Printv(f_shadow_stubs, "\n",NIL);
+	  Printv(f_shadow_stubs, module, ".", iname, "_swigconstant(", module, ")\n", NIL);
 	  Printv(f_shadow_stubs, iname, " = ", module, ".", iname, "\n", NIL);
 	}
       }
@@ -3478,8 +3506,8 @@ public:
       Printf(f_directors_h, "      return (iv != swig_inner.end() ? iv->second : false);\n");
       Printf(f_directors_h, "    }\n");
 
-      Printf(f_directors_h, "    void swig_set_inner(const char *swig_protected_method_name, bool val) const {\n");
-      Printf(f_directors_h, "      swig_inner[swig_protected_method_name] = val;\n");
+      Printf(f_directors_h, "    void swig_set_inner(const char *swig_protected_method_name, bool swig_val) const {\n");
+      Printf(f_directors_h, "      swig_inner[swig_protected_method_name] = swig_val;\n");
       Printf(f_directors_h, "    }\n");
       Printf(f_directors_h, "private:\n");
       Printf(f_directors_h, "    mutable std::map<std::string, bool> swig_inner;\n");
