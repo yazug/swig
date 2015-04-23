@@ -3584,7 +3584,7 @@ public:
       } else {
 	String *symname = Getattr(n, "sym:name");
 	String *mrename = Swig_name_disown(NSPACE_TODO, symname);	//Getattr(n, "name"));
-	Printv(f_shadow, tab4, "def __disown__(self):\n", NIL);
+	Printv(f_shadow, "\n", tab4, "def __disown__(self):\n", NIL);
 #ifdef USE_THISOWN
 	Printv(f_shadow, tab8, "self.thisown = 0\n", NIL);
 #else
