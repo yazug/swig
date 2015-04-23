@@ -893,7 +893,7 @@ public:
 	       tab4, "if (not static):\n",
 	       tab4, tab4, "return object.__getattr__(self, name)\n",
 	       tab4, "else:\n",
-	       tab4, tab4, "raise AttributeError(name)\n\n",
+	       tab4, tab4, "raise AttributeError(name)\n\n\n",
 	       "def _swig_getattr(self, class_type, name):\n", tab4, "return _swig_getattr_nondynamic(self, class_type, name, 0)\n\n", NIL);
 
 	Printv(f_shadow,
