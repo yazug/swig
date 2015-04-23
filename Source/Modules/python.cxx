@@ -4306,7 +4306,7 @@ public:
 	  }
 	}
 	Printf(f_shadow_file, "%s_swigregister = %s.%s_swigregister\n", class_name, module, class_name);
-	Printf(f_shadow_file, "%s_swigregister(%s)\n", class_name, class_name);
+	Printf(f_shadow_file, "%s_swigregister(%s)\n\n", class_name, class_name);
       }
 
       shadow_indent = 0;
