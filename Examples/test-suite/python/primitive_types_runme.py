@@ -269,7 +269,7 @@ if cvar.var_namet != '':
     raise RuntimeError, "bad char empty case"
 
 cvar.var_pchar = None
-if cvar.var_pchar != None:
+if cvar.var_pchar is not None:
     raise RuntimeError, "bad None case"
 
 cvar.var_pchar = ''
@@ -278,7 +278,7 @@ if cvar.var_pchar != '':
     raise RuntimeError, "bad char empty case"
 
 cvar.var_pcharc = None
-if cvar.var_pcharc != None:
+if cvar.var_pcharc is not None:
     raise RuntimeError, "bad None case"
 
 cvar.var_pcharc = ''
