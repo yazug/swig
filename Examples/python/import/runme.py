@@ -2,10 +2,11 @@
 # Test various properties of classes defined in separate modules
 
 print "Testing the %import directive"
-import base
-import foo
-import bar
-import spam
+if True:
+    import base
+    import foo
+    import bar
+    import spam
 
 # Create some objects
 
