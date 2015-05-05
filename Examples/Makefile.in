@@ -391,6 +391,19 @@ $(RUNME)3.py: $(SRCDIR)$(RUNME).py
 	$(PY2TO3) -w $@ >/dev/null 2>&1
 
 # -----------------------------------------------------------------
+# Run Python pep8 if it exists
+# -----------------------------------------------------------------
+
+PEP8         = @PEP8@
+# E501 is line length too long not a blocker for a test app
+PEP8_FLAGS   = --ignore=E501
+python_check: $(PYSCRIPT)
+	+if [ -n "$(PEP8)" ]; then \
+		$(PEP8) $(PEP8_FLAGS) $(PYSCRIPT) || true;\
+	fi
+
+
+# -----------------------------------------------------------------
 # Version display
 # -----------------------------------------------------------------
 

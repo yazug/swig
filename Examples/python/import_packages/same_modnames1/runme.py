@@ -4,8 +4,9 @@ import os.path
 testname = os.path.basename(os.path.dirname(os.path.abspath(__file__)))
 print "Testing " + testname + " - %module(package=...) + python 'import' in __init__.py"
 
-import pkg2.foo
-print "  Finished importing pkg2.foo"
+if True:
+    import pkg2.foo
+    print "  Finished importing pkg2.foo"
 
 var2 = pkg2.foo.Pkg2_Foo()
 if str(type(var2)).find("'pkg2.foo.Pkg2_Foo'") == -1:
