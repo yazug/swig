@@ -397,6 +397,18 @@ $(RUNME)3.py: $(SRCDIR)$(RUNME).py
 python_version:
 	$(PYTHON) -V
 
+PEP8         = @PEP8@
+python_examples_pep8:
+	if [ -n "$(PEP8)" ]; then \
+	  $(PEP8) --statistics -qq python/*/*.py python/*/*/*.py || true;\
+	fi
+
+python_test-suite_pep8:
+	if [ -n "$(PEP8)" ]; then \
+	  $(PEP8) --statistics -qq test-suite/python/*.py || true;\
+	fi
+
+
 # -----------------------------------------------------------------
 # Cleaning the python examples
 # -----------------------------------------------------------------
